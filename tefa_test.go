@@ -9,7 +9,7 @@ import (
 
 func TestTefa(t *testing.T) {
 	Convey("It can generate with sequence number", t, func() {
-		tefa, err := newTefa(`No. {{ seq }}`)
+		tefa, err := newTefa(`No. {{ .Seq }}`)
 		So(err, ShouldBeNil)
 
 		out := &bytes.Buffer{}
@@ -21,5 +21,15 @@ func TestTefa(t *testing.T) {
 		tefa.Execute(out)
 
 		So(out.String(), ShouldEqual, "No. 2")
+	})
+
+	Convey("It can use fake data", t, func() {
+		tefa, err := newTefa(`{{ .Name }}`)
+		So(err, ShouldBeNil)
+
+		out := &bytes.Buffer{}
+		tefa.Execute(out)
+
+		So(out.String(), ShouldNotEqual, "")
 	})
 }

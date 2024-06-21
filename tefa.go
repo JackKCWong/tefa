@@ -1,12 +1,15 @@
 package main
 
 import (
+	"github.com/brianvoe/gofakeit/v7"
+	"github.com/brianvoe/gofakeit/v7/source"
 	"io"
 	"strings"
 	"text/template"
 )
 
 type tefa struct {
+	*gofakeit.Faker
 	seq int64
 	te  *template.Template
 }
@@ -22,14 +25,13 @@ func (f *tefa) Execute(w io.Writer) error {
 
 func newTefa(str string) (*tefa, error) {
 	te := template.New("template")
-	fa := &tefa{te: te}
-
+	tefa := &tefa{
+		Faker: gofakeit.NewFaker(source.NewCrypto(), true),
+		te:    te,
+	}
 	_, err := te.Funcs(template.FuncMap{
 		"csv": func(str string) string {
 			return escapeCsv(str)
-		},
-		"seq": func() int64 {
-			return fa.Seq()
 		},
 	}).Parse(str)
 
@@ -37,7 +39,7 @@ func newTefa(str string) (*tefa, error) {
 		return nil, err
 	}
 
-	return fa, nil
+	return tefa, nil
 }
 
 // escapeCsv escapes a string for use in a CSV file.

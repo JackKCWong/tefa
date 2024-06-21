@@ -13,7 +13,7 @@ var rootCmd = &cobra.Command{
 	Short: "TEmplating with FAke data.",
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		count := must(cmd.Flags().GetInt32("count"))
+		count := must(cmd.Flags().GetInt("count"))
 		if count < 1 {
 			return fmt.Errorf("count must be greater than 0")
 		}
@@ -45,7 +45,13 @@ var rootCmd = &cobra.Command{
 			return fmt.Errorf("failed to parse template file: %w", err)
 		}
 
-		return te.Execute(out)
+		for i := 0; i < count; i++ {
+			if err := te.Execute(out); err != nil {
+				return fmt.Errorf("failed to execute template: %w", err)
+			}
+		}
+
+		return nil
 	},
 }
 
@@ -58,7 +64,7 @@ func must[T any](v T, err error) T {
 
 func init() {
 	rootCmd.Flags().StringP("output", "o", "", "output file")
-	rootCmd.Flags().Int32P("count", "c", 1, "number of times to repeat the template")
+	rootCmd.Flags().IntP("count", "c", 1, "number of times to repeat the template")
 }
 
 func main() {
