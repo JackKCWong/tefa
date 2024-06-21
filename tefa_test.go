@@ -32,4 +32,14 @@ func TestTefa(t *testing.T) {
 
 		So(out.String(), ShouldNotEqual, "")
 	})
+
+	Convey("It can use sprig functions", t, func() {
+		tefa, err := newTefa(`{{ "!" | repeat 3 }}`)
+		So(err, ShouldBeNil)
+
+		out := &bytes.Buffer{}
+		tefa.Execute(out)
+
+		So(out.String(), ShouldEqual, "!!!")
+	})
 }

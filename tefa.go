@@ -1,11 +1,13 @@
 package main
 
 import (
-	"github.com/brianvoe/gofakeit/v7"
-	"github.com/brianvoe/gofakeit/v7/source"
 	"io"
 	"strings"
 	"text/template"
+
+	"github.com/Masterminds/sprig/v3"
+	"github.com/brianvoe/gofakeit/v7"
+	"github.com/brianvoe/gofakeit/v7/source"
 )
 
 type tefa struct {
@@ -29,11 +31,10 @@ func newTefa(str string) (*tefa, error) {
 		Faker: gofakeit.NewFaker(source.NewCrypto(), true),
 		te:    te,
 	}
-	_, err := te.Funcs(template.FuncMap{
-		"csv": func(str string) string {
-			return escapeCsv(str)
-		},
-	}).Parse(str)
+
+	funcs := sprig.FuncMap()
+	funcs["csv"] = escapeCsv
+	_, err := te.Funcs(funcs).Parse(str)
 
 	if err != nil {
 		return nil, err
