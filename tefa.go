@@ -45,10 +45,14 @@ func newTefa(str string) (*tefa, error) {
 
 // escapeCsv escapes a string for use in a CSV file.
 func escapeCsv(str string) string {
-	// Add double quotes around the string if it contains double quotes.
-	if strings.ContainsAny(str, "\"") {
-		str = "\"" + strings.ReplaceAll(str, "\"", "\"\"") + "\""
+	// Add double quotes around the string if it contains double quotes, commas, or newlines
+	if strings.Contains(str, "\"") || strings.Contains(str, ",") || strings.Contains(str, "\n") {
+		str = strings.ReplaceAll(str, "\"", "\"\"")
+		str = "\"" + str + "\""
 	}
+
+	// Replace all newlines
+	str = strings.ReplaceAll(str, "\n", "\\n")
 
 	return str
 }
