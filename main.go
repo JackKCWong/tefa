@@ -18,37 +18,34 @@ var rootCmd = &cobra.Command{
 			return fmt.Errorf("count must be greater than 0")
 		}
 
-		templatePath := args[0]
-		output := must(cmd.Flags().GetString("output"))
-		var out io.Writer
-		if output == "" {
-			out = os.Stdout
-		} else {
-			of, err := os.Create(output)
-			if err != nil {
-				return fmt.Errorf("failed to create output file: %w", err)
-			}
-
-			defer of.Close()
-			out = of
+		out, err := mkOutput(must(cmd.Flags().GetString("output")))
+		if err != nil {
+			return fmt.Errorf("failed to open output file: %w", err)
 		}
 
 		// Read the template file
-		templateData, err := os.ReadFile(templatePath)
+		mainTemplatePath := args[0]
+		mainTemplateBytes, err := os.ReadFile(mainTemplatePath)
 		if err != nil {
-			return fmt.Errorf("failed to read template file: %w", err)
+			return fmt.Errorf("failed to read main template file: %w", err)
 		}
 
-		templateString := string(templateData)
-		te, err := newTefa(templateString)
+		preTemplatePath := must(cmd.Flags().GetString("pre"))
+		preTemplateBytes := []byte{}
+		if preTemplatePath != "" {
+			preTemplateBytes, err = os.ReadFile(preTemplatePath)
+			if err != nil {
+				return fmt.Errorf("failed to read pre template file: %w", err)
+			}
+		}
+
+		te, err := newTefa(string(preTemplateBytes), string(mainTemplateBytes))
 		if err != nil {
 			return fmt.Errorf("failed to parse template file: %w", err)
 		}
 
-		for i := 0; i < count; i++ {
-			if err := te.Execute(out); err != nil {
-				return fmt.Errorf("failed to execute template: %w", err)
-			}
+		if err := te.Execute(out, count); err != nil {
+			return fmt.Errorf("failed to execute template: %w", err)
 		}
 
 		return nil
@@ -62,9 +59,23 @@ func must[T any](v T, err error) T {
 	return v
 }
 
+func mkOutput(output string) (io.WriteCloser, error) {
+	if output == "" {
+		return os.Stdout, nil
+	}
+
+	of, err := os.Create(output)
+	if err != nil {
+		return nil, err
+	}
+
+	return of, nil
+}
+
 func init() {
 	rootCmd.Flags().StringP("output", "o", "", "output file")
 	rootCmd.Flags().IntP("count", "c", 1, "number of times to repeat the template")
+	rootCmd.Flags().StringP("pre", "p", "", "a snippet of template code to run before the main template")
 }
 
 func main() {

@@ -1,9 +1,14 @@
 package main
 
 import (
+	"bufio"
+	"bytes"
 	"io"
+	"os"
 	"strings"
 	"text/template"
+
+	"math/rand"
 
 	"github.com/Masterminds/sprig/v3"
 	"github.com/brianvoe/gofakeit/v7"
@@ -12,8 +17,9 @@ import (
 
 type tefa struct {
 	*gofakeit.Faker
-	seq int64
-	te  *template.Template
+	seq  int64
+	tp   *template.Template
+	Data chan any
 }
 
 func (f *tefa) Seq() int64 {
@@ -21,23 +27,39 @@ func (f *tefa) Seq() int64 {
 	return f.seq
 }
 
-func (f *tefa) Execute(w io.Writer) error {
-	return f.te.Execute(w, f)
+func (f *tefa) Execute(w io.Writer, i int) error {
+	go func() {
+		for j := 0; j < i; j++ {
+			f.Data <- f
+		}
+		close(f.Data)
+	}()
+
+	return f.tp.Execute(w, f)
 }
 
-func newTefa(str string) (*tefa, error) {
-	te := template.New("template")
-	tefa := &tefa{
-		Faker: gofakeit.NewFaker(source.NewCrypto(), true),
-		te:    te,
-	}
-
+func newTefa(preTemplate, mainTemplate string) (*tefa, error) {
 	funcs := sprig.FuncMap()
 	funcs["csv"] = escapeCsv
-	_, err := te.Funcs(funcs).Parse(str)
+	funcs["lines"] = readlines
+	funcs["any"] = anyOf
+
+	templateBody := bytes.Buffer{}
+	templateBody.WriteString(preTemplate)
+	templateBody.WriteString("{{range .Data}}")
+	templateBody.WriteString(mainTemplate)
+	templateBody.WriteString("{{end}}")
+
+	tp, err := template.New("").Funcs(funcs).Parse(templateBody.String())
 
 	if err != nil {
 		return nil, err
+	}
+
+	tefa := &tefa{
+		Faker: gofakeit.NewFaker(source.NewCrypto(), true),
+		tp:    tp,
+		Data:  make(chan any),
 	}
 
 	return tefa, nil
@@ -55,4 +77,34 @@ func escapeCsv(str string) string {
 	str = strings.ReplaceAll(str, "\n", "\\n")
 
 	return str
+}
+
+// readlines reads a file line by line and returns a slice of strings.
+func readlines(filepath string) ([]string, error) {
+	file, err := os.Open(filepath)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+
+	var lines []string
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		lines = append(lines, scanner.Text())
+	}
+
+	if err := scanner.Err(); err != nil {
+		return nil, err
+	}
+
+	return lines, nil
+}
+
+func anyOf(strs []string) string {
+	if len(strs) < 1 {
+		return ""
+	}
+
+	rnd := rand.Intn(len(strs))
+	return strs[rnd]
 }

@@ -1,1 +1,2 @@
-Hello {{ .Name }}
+{{$i = add1 $i -}}
+{{$i}} Hello {{ $me }}
