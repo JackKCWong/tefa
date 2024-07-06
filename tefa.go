@@ -59,7 +59,7 @@ func newTefa(preTemplate, mainTemplate string) (*tefa, error) {
 	tefa := &tefa{
 		Faker: gofakeit.NewFaker(source.NewCrypto(), true),
 		tp:    tp,
-		Data:  make(chan any),
+		Data:  make(chan any, 1000),
 	}
 
 	return tefa, nil
