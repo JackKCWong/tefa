@@ -1,2 +1,1 @@
-{{$i = add1 $i -}}
-{{$i}} Hello {{ $me }}
+{{ until 5 | islice | any }}

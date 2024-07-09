@@ -2,9 +2,9 @@ package main
 
 import (
 	"bufio"
-	"bytes"
 	"io"
 	"os"
+	"reflect"
 	"strings"
 	"text/template"
 
@@ -17,40 +17,35 @@ import (
 
 type tefa struct {
 	*gofakeit.Faker
-	seq  int64
-	tp   *template.Template
-	Data chan any
+	idx int
+	tp  *template.Template
 }
 
-func (f *tefa) Seq() int64 {
-	f.seq++
-	return f.seq
+func (f *tefa) Index() int {
+	return f.idx
 }
 
-func (f *tefa) Execute(w io.Writer, i int) error {
-	go func() {
-		for j := 0; j < i; j++ {
-			f.Data <- f
+func (f *tefa) Execute(w io.Writer, n int) error {
+	for i := 0; i < n; i++ {
+		f.idx = i
+		if err := f.tp.Execute(w, f); err != nil {
+			return err
 		}
-		close(f.Data)
-	}()
+	}
 
-	return f.tp.Execute(w, f)
+	return nil
 }
 
-func newTefa(preTemplate, mainTemplate string) (*tefa, error) {
+func newTefa(templateFiles ...string) (*tefa, error) {
 	funcs := sprig.FuncMap()
 	funcs["csv"] = escapeCsv
 	funcs["lines"] = readlines
 	funcs["any"] = anyOf
+	funcs["nth"] = nth
+	funcs["tick"] = tick
+	funcs["islice"] = interfaceSlice 
 
-	templateBody := bytes.Buffer{}
-	templateBody.WriteString(preTemplate)
-	templateBody.WriteString("{{range .Data}}")
-	templateBody.WriteString(mainTemplate)
-	templateBody.WriteString("{{end}}")
-
-	tp, err := template.New("").Funcs(funcs).Parse(templateBody.String())
+	tp, err := template.New(templateFiles[0]).Funcs(funcs).ParseFiles(templateFiles...)
 
 	if err != nil {
 		return nil, err
@@ -59,7 +54,6 @@ func newTefa(preTemplate, mainTemplate string) (*tefa, error) {
 	tefa := &tefa{
 		Faker: gofakeit.NewFaker(source.NewCrypto(), true),
 		tp:    tp,
-		Data:  make(chan any, 1000),
 	}
 
 	return tefa, nil
@@ -100,11 +94,46 @@ func readlines(filepath string) ([]string, error) {
 	return lines, nil
 }
 
-func anyOf(strs []string) string {
-	if len(strs) < 1 {
-		return ""
-	}
+func anyOf(arr []any) any {
+	rnd := rand.Intn(len(arr))
+	return arr[rnd]
+}
 
-	rnd := rand.Intn(len(strs))
-	return strs[rnd]
+func nth(n int, arr []any) any {
+	return arr[n]
+}
+
+func tick(n uint64) chan uint64 {
+	c := make(chan uint64)
+	go func() {
+		var i uint64
+		for i < n {
+			c <- i
+			i++
+		}
+
+		close(c)
+	}()
+
+	return c
+}
+
+func interfaceSlice(slice interface{}) []interface{} {
+    s := reflect.ValueOf(slice)
+    if s.Kind() != reflect.Slice {
+        panic("InterfaceSlice() given a non-slice type")
+    }
+
+    // Keep the distinction between nil and empty slice input
+    if s.IsNil() {
+        return nil
+    }
+
+    ret := make([]interface{}, s.Len())
+
+    for i:=0; i<s.Len(); i++ {
+        ret[i] = s.Index(i).Interface()
+    }
+
+    return ret
 }
