@@ -46,4 +46,10 @@ It combines [Go template](https://pkg.go.dev/text/template) with [gofakeit](http
 
 `bool(p float32)`: a true/false value with a given probability.
 
+`kv(k string)`: return a value defined by `-D` flag.
+
+`atoi(string)`: convert string to int.
+
+`mapf(f string, s any)`: convert `[]any` to `[]string` using `printf`.
+
 `.Index`: When a template is repeated multiple times, this function can be used to generate a sequence of numbers starting from 0.

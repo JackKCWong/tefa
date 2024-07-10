@@ -23,7 +23,9 @@ var rootCmd = &cobra.Command{
 			return fmt.Errorf("failed to open output file: %w", err)
 		}
 
-		te, err := newTefa(args...)
+		kvs := must(cmd.Flags().GetStringToString("kv"))
+
+		te, err := newTefa(kvs, args...)
 		if err != nil {
 			return fmt.Errorf("failed to parse template file: %w", err)
 		}
@@ -43,6 +45,12 @@ func must[T any](v T, err error) T {
 	return v
 }
 
+func init() {
+	rootCmd.Flags().StringP("output", "o", "", "output file")
+	rootCmd.Flags().IntP("repeat", "r", 1, "number of times to repeat the template")
+	rootCmd.Flags().StringToStringP("kv", "D", make(map[string]string), "define key=value pairs, use comma to separate multiple pairs")
+}
+
 func mkOutput(output string) (io.WriteCloser, error) {
 	if output == "" {
 		return os.Stdout, nil
@@ -54,11 +62,6 @@ func mkOutput(output string) (io.WriteCloser, error) {
 	}
 
 	return of, nil
-}
-
-func init() {
-	rootCmd.Flags().StringP("output", "o", "", "output file")
-	rootCmd.Flags().IntP("repeat", "r", 1, "number of times to repeat the template")
 }
 
 func main() {

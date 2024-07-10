@@ -1,1 +1,3 @@
-{{ until 5 | islice | any }}
+{{ range $i := tick (kv "x" | atoi) }}
+{{ "3,2,1,0" | splitList "," | shuffle | mapf "%s" | join "," }}
+{{end}}

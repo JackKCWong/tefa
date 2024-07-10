@@ -2,9 +2,11 @@ package main
 
 import (
 	"bufio"
+	"fmt"
 	"io"
 	"os"
 	"reflect"
+	"strconv"
 	"strings"
 	"text/template"
 
@@ -36,7 +38,7 @@ func (f *tefa) Execute(w io.Writer, n int) error {
 	return nil
 }
 
-func newTefa(templateFiles ...string) (*tefa, error) {
+func newTefa(vars map[string]string, templateFiles ...string) (*tefa, error) {
 	funcs := sprig.FuncMap()
 	funcs["csv"] = escapeCsv
 	funcs["lines"] = readlines
@@ -47,6 +49,11 @@ func newTefa(templateFiles ...string) (*tefa, error) {
 	funcs["bool"] = randomBool
 	funcs["shuffle"] = shuffle
 	funcs["islice"] = interfaceSlice
+	funcs["mapf"] = mapf
+	funcs["kv"] = func(k string) string {
+		return vars[k]
+	}
+	funcs["atoi"] = strconv.Atoi
 
 	tp, err := template.New(templateFiles[0]).Funcs(funcs).ParseFiles(templateFiles...)
 
@@ -126,10 +133,10 @@ func nth(n int, arr []string) string {
 	return arr[n]
 }
 
-func tick(n uint64) chan uint64 {
-	c := make(chan uint64)
+func tick(n int) chan int {
+	c := make(chan int)
 	go func() {
-		var i uint64
+		var i int
 		for i < n {
 			c <- i
 			i++
@@ -168,6 +175,16 @@ func interfaceSlice(slice interface{}) []interface{} {
 
 	for i := 0; i < s.Len(); i++ {
 		ret[i] = s.Index(i).Interface()
+	}
+
+	return ret
+}
+
+func mapf(f string, s interface{}) []string {
+	sli := interfaceSlice(s)
+	ret := make([]string, len(sli))
+	for i, v := range sli {
+		ret[i] = fmt.Sprintf(f, v)
 	}
 
 	return ret
