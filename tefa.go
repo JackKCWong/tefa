@@ -43,7 +43,7 @@ func newTefa(templateFiles ...string) (*tefa, error) {
 	funcs["any"] = anyOf
 	funcs["nth"] = nth
 	funcs["tick"] = tick
-	funcs["islice"] = interfaceSlice 
+	funcs["islice"] = interfaceSlice
 
 	tp, err := template.New(templateFiles[0]).Funcs(funcs).ParseFiles(templateFiles...)
 
@@ -94,12 +94,12 @@ func readlines(filepath string) ([]string, error) {
 	return lines, nil
 }
 
-func anyOf(arr []any) any {
+func anyOf(arr []string) string {
 	rnd := rand.Intn(len(arr))
 	return arr[rnd]
 }
 
-func nth(n int, arr []any) any {
+func nth(n int, arr []string) string {
 	return arr[n]
 }
 
@@ -119,21 +119,21 @@ func tick(n uint64) chan uint64 {
 }
 
 func interfaceSlice(slice interface{}) []interface{} {
-    s := reflect.ValueOf(slice)
-    if s.Kind() != reflect.Slice {
-        panic("InterfaceSlice() given a non-slice type")
-    }
+	s := reflect.ValueOf(slice)
+	if s.Kind() != reflect.Slice {
+		panic("InterfaceSlice() given a non-slice type")
+	}
 
-    // Keep the distinction between nil and empty slice input
-    if s.IsNil() {
-        return nil
-    }
+	// Keep the distinction between nil and empty slice input
+	if s.IsNil() {
+		return nil
+	}
 
-    ret := make([]interface{}, s.Len())
+	ret := make([]interface{}, s.Len())
 
-    for i:=0; i<s.Len(); i++ {
-        ret[i] = s.Index(i).Interface()
-    }
+	for i := 0; i < s.Len(); i++ {
+		ret[i] = s.Index(i).Interface()
+	}
 
-    return ret
+	return ret
 }
