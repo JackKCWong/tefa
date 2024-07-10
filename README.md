@@ -30,14 +30,20 @@ It combines [Go template](https://pkg.go.dev/text/template) with [gofakeit](http
 
 ## Additional functions / methods
 
-`.Index`: When a template is repeated multiple times, this function can be used to generate a sequence of numbers starting from 0.
+`lines(filepath string)`: read all lines from a file.
 
-`lines`: read lines from a file.
+`scan(filepath string)`: read a file line by line.
 
-`csv`: escape the input so it's safe to put in a csv cell.
+`csv(val string)`: escape the input so it's safe to put in a csv cell.
 
-`nth`: get nth element from a slice.
+`nth([]string)`: get nth element from a `[]string`.
 
-`any`: get a random element from a slice.
+`any([]string)`: get a random element from a `[]string`.
+
+`shuffle([]string)`: shuffle a `[]string`.
 
 `islice`: convert any slice (`[]int`, `[]string`, etc.) to a `[]interface{}`
+
+`bool(p float32)`: a true/false value with a given probability.
+
+`.Index`: When a template is repeated multiple times, this function can be used to generate a sequence of numbers starting from 0.

@@ -40,9 +40,12 @@ func newTefa(templateFiles ...string) (*tefa, error) {
 	funcs := sprig.FuncMap()
 	funcs["csv"] = escapeCsv
 	funcs["lines"] = readlines
+	funcs["scan"] = scanlines
 	funcs["any"] = anyOf
 	funcs["nth"] = nth
 	funcs["tick"] = tick
+	funcs["bool"] = randomBool
+	funcs["shuffle"] = shuffle
 	funcs["islice"] = interfaceSlice
 
 	tp, err := template.New(templateFiles[0]).Funcs(funcs).ParseFiles(templateFiles...)
@@ -94,6 +97,26 @@ func readlines(filepath string) ([]string, error) {
 	return lines, nil
 }
 
+func scanlines(filepath string) (chan string, error) {
+	file, err := os.Open(filepath)
+	if err != nil {
+		return nil, err
+	}
+
+	defer file.Close()
+
+	lines := make(chan string, 1000)
+	go func() {
+		defer close(lines)
+		scanner := bufio.NewScanner(file)
+		for scanner.Scan() {
+			lines <- scanner.Text()
+		}
+	}()
+
+	return lines, nil
+}
+
 func anyOf(arr []string) string {
 	rnd := rand.Intn(len(arr))
 	return arr[rnd]
@@ -116,6 +139,18 @@ func tick(n uint64) chan uint64 {
 	}()
 
 	return c
+}
+
+func shuffle(arr []string) []string {
+	rand.Shuffle(len(arr), func(i, j int) {
+		arr[i], arr[j] = arr[j], arr[i]
+	})
+
+	return arr
+}
+
+func randomBool(p float32) bool {
+	return rand.Float32() < p
 }
 
 func interfaceSlice(slice interface{}) []interface{} {
