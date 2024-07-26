@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"strings"
 	"text/template"
+	"time"
 
 	"math/rand"
 
@@ -16,6 +17,8 @@ import (
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/brianvoe/gofakeit/v7/source"
 	"github.com/google/uuid"
+	"github.com/oklog/ulid/v2"
+	"github.com/sqids/sqids-go"
 )
 
 type tefa struct {
@@ -40,6 +43,10 @@ func (f *tefa) Execute(w io.Writer, n int) error {
 }
 
 func newTefa(vars map[string]string, templateFiles ...string) (*tefa, error) {
+	tefa := &tefa{
+		Faker: gofakeit.NewFaker(source.NewCrypto(), true),
+	}
+
 	funcs := sprig.FuncMap()
 	funcs["csv"] = escapeCsv
 	funcs["lines"] = readlines
@@ -56,6 +63,11 @@ func newTefa(vars map[string]string, templateFiles ...string) (*tefa, error) {
 	}
 	funcs["atoi"] = strconv.Atoi
 	funcs["uuidv7"] = uuid.NewV7
+	funcs["ulid"] = ulid.Make
+	sqgen, _ := sqids.New()
+	funcs["sqid"] = func() (string, error) {
+		return sqgen.Encode([]uint64{uint64(tefa.idx), uint64(time.Now().Unix())})
+	}
 
 	tp, err := template.New(templateFiles[0]).Funcs(funcs).ParseFiles(templateFiles...)
 
@@ -63,10 +75,7 @@ func newTefa(vars map[string]string, templateFiles ...string) (*tefa, error) {
 		return nil, err
 	}
 
-	tefa := &tefa{
-		Faker: gofakeit.NewFaker(source.NewCrypto(), true),
-		tp:    tp,
-	}
+	tefa.tp = tp
 
 	return tefa, nil
 }

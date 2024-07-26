@@ -30,6 +30,8 @@ It combines [Go template](https://pkg.go.dev/text/template) with [gofakeit](http
 
 ## Additional functions / methods
 
+`.Index`: When a template is repeated multiple times, this function can be used to generate a sequence of numbers starting from 0.
+
 `lines(filepath string)`: read all lines from a file.
 
 `scan(filepath string)`: read a file line by line.
@@ -52,6 +54,8 @@ It combines [Go template](https://pkg.go.dev/text/template) with [gofakeit](http
 
 `mapf(f string, s any)`: convert `[]any` to `[]string` using `printf`.
 
-`uuidv7`: generate a UUID v7 which can be time sorted.
+`uuidv7`: generate a UUID v7 which can be time sorted. [Ref.](https://pkg.go.dev/github.com/google/uuid#NewV7)
 
-`.Index`: When a template is repeated multiple times, this function can be used to generate a sequence of numbers starting from 0.
+`ulid`: Universally Unique Lexicographically Sortable Identifier. [Ref.](https://pkg.go.dev/github.com/oklog/ulid/v2#Make)
+
+`sqid`: A [Sqids](https://pkg.go.dev/github.com/sqids/sqids-go#section-readme) by encoding `.Index` and `time.Now()`
