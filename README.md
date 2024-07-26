@@ -52,4 +52,6 @@ It combines [Go template](https://pkg.go.dev/text/template) with [gofakeit](http
 
 `mapf(f string, s any)`: convert `[]any` to `[]string` using `printf`.
 
+`uuidv7`: generate a UUID v7 which can be time sorted.
+
 `.Index`: When a template is repeated multiple times, this function can be used to generate a sequence of numbers starting from 0.

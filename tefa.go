@@ -15,6 +15,7 @@ import (
 	"github.com/Masterminds/sprig/v3"
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/brianvoe/gofakeit/v7/source"
+	"github.com/google/uuid"
 )
 
 type tefa struct {
@@ -54,6 +55,7 @@ func newTefa(vars map[string]string, templateFiles ...string) (*tefa, error) {
 		return vars[k]
 	}
 	funcs["atoi"] = strconv.Atoi
+	funcs["uuidv7"] = uuid.NewV7
 
 	tp, err := template.New(templateFiles[0]).Funcs(funcs).ParseFiles(templateFiles...)
 
