@@ -11,6 +11,7 @@ require (
 	github.com/oklog/ulid/v2 v2.1.0
 	github.com/spf13/cobra v1.8.1
 	github.com/sqids/sqids-go v0.4.1
+	gopkg.in/yaml.v3 v3.0.1
 )
 
 require (
@@ -18,7 +19,6 @@ require (
 	github.com/Masterminds/goutils v1.1.1 // indirect
 	github.com/Masterminds/semver/v3 v3.3.1 // indirect
 	github.com/huandu/xstrings v1.5.0 // indirect
-	github.com/imdario/mergo v0.3.16 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/mitchellh/copystructure v1.2.0 // indirect
 	github.com/mitchellh/reflectwalk v1.0.2 // indirect

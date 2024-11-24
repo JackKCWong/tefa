@@ -25,6 +25,8 @@ type tefa struct {
 	*gofakeit.Faker
 	idx int
 	tp  *template.Template
+
+	Values map[string]any
 }
 
 func (f *tefa) Index() int {
@@ -42,7 +44,7 @@ func (f *tefa) Execute(w io.Writer, n int) error {
 	return nil
 }
 
-func newTefa(vars map[string]string, templateFiles ...string) (*tefa, error) {
+func newTefa(vals map[string]any, templateFiles ...string) (*tefa, error) {
 	tefa := &tefa{
 		Faker: gofakeit.NewFaker(source.NewCrypto(), true),
 	}
@@ -58,9 +60,6 @@ func newTefa(vars map[string]string, templateFiles ...string) (*tefa, error) {
 	funcs["shuffle"] = shuffle
 	funcs["islice"] = interfaceSlice
 	funcs["mapf"] = mapf
-	funcs["kv"] = func(k string) string {
-		return vars[k]
-	}
 	funcs["atoi"] = strconv.Atoi
 	funcs["uuidv7"] = uuid.NewV7
 	funcs["ulid"] = ulid.Make
@@ -76,6 +75,7 @@ func newTefa(vars map[string]string, templateFiles ...string) (*tefa, error) {
 	}
 
 	tefa.tp = tp
+	tefa.Values = vals
 
 	return tefa, nil
 }

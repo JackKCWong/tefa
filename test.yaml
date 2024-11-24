@@ -1,0 +1,8 @@
+nested:
+  list:
+    - 1
+    - 2
+    - 3
+
+floatVal: 123.4
+intVal: 123

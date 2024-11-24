@@ -4,8 +4,11 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strconv"
+	"time"
 
 	"github.com/spf13/cobra"
+	"gopkg.in/yaml.v3"
 )
 
 var rootCmd = &cobra.Command{
@@ -23,9 +26,21 @@ var rootCmd = &cobra.Command{
 			return fmt.Errorf("failed to open output file: %w", err)
 		}
 
-		kvs := must(cmd.Flags().GetStringToString("kv"))
+		values := make(map[string]any)
+		valuesDefFile := must(cmd.Flags().GetString("values"))
+		if valuesDefFile != "" {
+			err := loadValues(valuesDefFile, &values)
+			if err != nil {
+				return err
+			}
+		}
 
-		te, err := newTefa(kvs, args...)
+		valuesFromCli := must(cmd.Flags().GetStringToString("define"))
+		for k, v := range inferTypes(valuesFromCli) {
+			values[k] = v
+		}
+
+		te, err := newTefa(values, args...)
 		if err != nil {
 			return fmt.Errorf("failed to parse template file: %w", err)
 		}
@@ -38,17 +53,11 @@ var rootCmd = &cobra.Command{
 	},
 }
 
-func must[T any](v T, err error) T {
-	if err != nil {
-		panic(err)
-	}
-	return v
-}
-
 func init() {
 	rootCmd.Flags().StringP("output", "o", "", "output file")
 	rootCmd.Flags().IntP("repeat", "r", 1, "number of times to repeat the template")
-	rootCmd.Flags().StringToStringP("kv", "D", make(map[string]string), "define key=value pairs, use comma to separate multiple pairs")
+	rootCmd.Flags().StringToStringP("define", "D", make(map[string]string), "define key=value pairs, use comma to separate multiple pairs")
+	rootCmd.Flags().StringP("values", "f", "", "a yaml file to load values from")
 }
 
 func mkOutput(output string) (io.WriteCloser, error) {
@@ -69,4 +78,54 @@ func main() {
 		fmt.Printf("error: %v\n", err)
 		return
 	}
+}
+
+func inferTypes(kv map[string]string) map[string]any {
+	ret := make(map[string]any)
+	for k, v := range kv {
+		if _, err := strconv.Atoi(v); err == nil {
+			ret[k] = v
+			continue
+		}
+
+		if _, err := strconv.ParseFloat(v, 64); err == nil {
+			ret[k] = v
+			continue
+		}
+
+		if _, err := time.Parse(time.RFC3339, v); err == nil {
+			ret[k] = v
+			continue
+		}
+
+		if _, err := time.ParseDuration(v); err == nil {
+			ret[k] = v
+			continue
+		}
+
+		ret[k] = v
+	}
+
+	return ret
+}
+
+func loadValues(path string, vals *map[string]any) error {
+	fileBytes, err := os.ReadFile(path)
+	if err != nil {
+		return fmt.Errorf("failed to read values file: %w", err)
+	}
+
+	err = yaml.Unmarshal(fileBytes, vals)
+	if err != nil {
+		return fmt.Errorf("failed to unmarshal values file: %w", err)
+	}
+
+	return nil
+}
+
+func must[T any](v T, err error) T {
+	if err != nil {
+		panic(err)
+	}
+	return v
 }
