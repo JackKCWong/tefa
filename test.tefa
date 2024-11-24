@@ -1,7 +1,11 @@
+{{- $col_def := cat "col_def.txt" -}}
+{{- $cols := cat .Values.cols -}}
 (
-{{ range $i, $x := cat "./README.md" | fgrep (cat "./pattern.txt") }}
-    {{- if $x.Matched -}}
-        {{"\t"}}{{- $x.Text | crlf -}}
+{{ range $i, $x := $col_def | fgrep $cols }}
+    {{- if not $x.Matched -}}
+        {{"\t"}}{{- $x.Text -}},{{"\n"}}
+    {{- else -}}
+        {{"\t--"}}{{- $x.Text -}},{{"\n"}}
     {{- end -}}
 {{ end }}
 )

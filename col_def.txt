@@ -1,0 +1,3 @@
+id int64
+name text
+attr1 text

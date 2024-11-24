@@ -188,19 +188,18 @@ type MatchResult struct {
 func fgrep(patterns []string, input []string) []MatchResult {
 	results := make([]MatchResult, 0)
 	for _, str := range input {
+		matched := false
+		pattern := ""
 		for _, p := range patterns {
 			if strings.Contains(str, p) {
-				results = append(results, MatchResult{
-					Pattern: p,
-					Matched: true,
-					Text:    str,
-				})
+				matched = true
+				pattern = p
 				break
 			}
 		}
 		results = append(results, MatchResult{
-			Pattern: "",
-			Matched: false,
+			Pattern: pattern,
+			Matched: matched,
 			Text:    str,
 		})
 	}
