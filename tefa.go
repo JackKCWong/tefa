@@ -52,12 +52,15 @@ func newTefa(vals map[string]any, templateFiles ...string) (*tefa, error) {
 	funcs := sprig.FuncMap()
 	funcs["csv"] = escapeCsv
 	funcs["lines"] = readlines
+	funcs["cat"] = cat
+	funcs["crlf"] = newline
 	funcs["scan"] = scanlines
 	funcs["any"] = anyOf
 	funcs["nth"] = nth
 	funcs["tick"] = tick
 	funcs["bool"] = randomBool
 	funcs["shuffle"] = shuffle
+	funcs["fgrep"] = fgrep
 	funcs["islice"] = interfaceSlice
 	funcs["mapf"] = mapf
 	funcs["atoi"] = strconv.Atoi
@@ -92,6 +95,15 @@ func escapeCsv(str string) string {
 	str = strings.ReplaceAll(str, "\n", "\\n")
 
 	return str
+}
+
+func cat(filepath string) []string {
+	lines, err := readlines(filepath)
+	if err != nil {
+		return []string{}
+	}
+
+	return lines
 }
 
 // readlines reads a file line by line and returns a slice of strings.
@@ -167,6 +179,35 @@ func shuffle(arr []string) []string {
 	return arr
 }
 
+type MatchResult struct {
+	Pattern string
+	Matched bool
+	Text    string
+}
+
+func fgrep(patterns []string, input []string) []MatchResult {
+	results := make([]MatchResult, 0)
+	for _, str := range input {
+		for _, p := range patterns {
+			if strings.Contains(str, p) {
+				results = append(results, MatchResult{
+					Pattern: p,
+					Matched: true,
+					Text:    str,
+				})
+				break
+			}
+		}
+		results = append(results, MatchResult{
+			Pattern: "",
+			Matched: false,
+			Text:    str,
+		})
+	}
+
+	return results
+}
+
 func randomBool(p float32) bool {
 	return rand.Float32() < p
 }
@@ -199,4 +240,8 @@ func mapf(f string, s interface{}) []string {
 	}
 
 	return ret
+}
+
+func newline(str string) string {
+	return str + "\n"
 }

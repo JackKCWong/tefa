@@ -1,4 +1,7 @@
-{{ index .Values "hello.world" }}
-{{ .Values.nested.list }}
-{{ .Values.intVal }}
-{{ .Values.floatVal }}
+(
+{{ range $i, $x := cat "./README.md" | fgrep (cat "./pattern.txt") }}
+    {{- if $x.Matched -}}
+        {{"\t"}}{{- $x.Text | crlf -}}
+    {{- end -}}
+{{ end }}
+)
